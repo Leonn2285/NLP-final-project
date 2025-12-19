@@ -31,10 +31,15 @@ def load_data(filepath: str = CLEANED_DATA_PATH) -> pd.DataFrame:
     Returns:
         DataFrame chứa dữ liệu
     """
-    df = pd.read_csv(filepath, encoding='utf-8')
+    # Đọc file với delimiter ; và xử lý multiline text
+    df = pd.read_csv(filepath, sep=';', encoding='utf-8', 
+                     on_bad_lines='skip', engine='python')
+    
     print(f"Loaded {len(df)} samples from {filepath}")
-    print(f"Categories: {df['category'].nunique()}")
-    print(f"Category distribution:\n{df['category'].value_counts()}")
+    print(f"Columns: {df.columns.tolist()}")
+    if 'category' in df.columns:
+        print(f"Categories: {df['category'].nunique()}")
+        print(f"Category distribution:\n{df['category'].value_counts()}")
     return df
 
 

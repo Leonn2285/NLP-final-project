@@ -21,8 +21,8 @@ if project_root not in sys.path:
 
 # Page config
 st.set_page_config(
-    page_title="🛒 Product Category Classifier",
-    page_icon="🛒",
+    page_title="Product Category Classifier",
+    page_icon="",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -164,6 +164,13 @@ st.markdown("""
     .stTextInput > div > div > input::placeholder,
     .stTextArea > div > div > textarea::placeholder {
         color: #8a7a6a !important;
+    }
+    /* Disabled textarea - fix màu text */
+    .stTextArea > div > div > textarea:disabled {
+        color: #3d3229 !important;
+        background-color: #ebe3d5 !important;
+        opacity: 1 !important;
+        -webkit-text-fill-color: #3d3229 !important;
     }
     
     /* Labels */
@@ -327,17 +334,38 @@ def load_models():
         from src.feature_extraction import load_vectorizer
         from src.ml_models import load_ml_model
         from src.data_utils import load_label_encoder
+        from config import DL_MODELS_DIR
+        import os
         
         preprocessor = create_preprocessor(use_word_segmentation=False, remove_stopwords=True)
         vectorizer = load_vectorizer()
         label_encoder = load_label_encoder()
         
         models = {}
+        # Load ML models
         for model_name in ['logistic_regression', 'svm', 'random_forest']:
             try:
                 models[model_name] = load_ml_model(model_name)
             except:
                 pass
+        
+        # Load LSTM model
+        try:
+            from src.dl_models import LSTMClassifier
+            lstm_path = os.path.join(DL_MODELS_DIR, "lstm_model.keras")
+            if os.path.exists(lstm_path):
+                models['lstm'] = LSTMClassifier.load(lstm_path)
+        except Exception as e:
+            print(f"Could not load LSTM model: {e}")
+        
+        # Load PhoBERT model
+        try:
+            from src.dl_models import PhoBERTClassifier
+            phobert_path = os.path.join(DL_MODELS_DIR, "phobert_model")
+            if os.path.exists(phobert_path):
+                models['phobert'] = PhoBERTClassifier.load(phobert_path)
+        except Exception as e:
+            print(f"Could not load PhoBERT model: {e}")
         
         return {
             'preprocessor': preprocessor,
@@ -355,13 +383,24 @@ def predict_category(text, model_name, resources):
     # Preprocess
     processed_text = resources['preprocessor'].preprocess(text)
     
-    # Vectorize
-    X = resources['vectorizer'].transform([processed_text])
-    
-    # Predict
     model = resources['models'][model_name]
-    prediction = model.predict(X)[0]
-    probas = model.predict_proba(X)[0]
+    
+    # Handle different model types
+    if model_name == 'lstm':
+        # LSTM cần TF-IDF features dạng dense array
+        X = resources['vectorizer'].transform([processed_text])
+        X_dense = X.toarray().astype('float32')
+        prediction = model.predict(X_dense)[0]
+        probas = model.predict_proba(X_dense)[0]
+    elif model_name == 'phobert':
+        # PhoBERT cần raw text
+        prediction = model.predict([processed_text])[0]
+        probas = model.predict_proba([processed_text])[0]
+    else:
+        # ML models cần TF-IDF sparse matrix
+        X = resources['vectorizer'].transform([processed_text])
+        prediction = model.predict(X)[0]
+        probas = model.predict_proba(X)[0]
     
     # Get category name
     category = resources['label_encoder'].inverse_transform([prediction])[0]
@@ -383,7 +422,7 @@ def predict_category(text, model_name, resources):
 
 def main():
     # Header
-    st.markdown('<h1 class="main-header">🛒 Product Category Classifier</h1>', unsafe_allow_html=True)
+    st.markdown('<h1 class="main-header">Product Category Classifier</h1>', unsafe_allow_html=True)
     st.markdown('<p class="sub-header">Phân loại sản phẩm tự động theo danh mục sử dụng AI/ML</p>', unsafe_allow_html=True)
     
     # Load resources
@@ -409,7 +448,9 @@ def main():
         model_display_names = {
             'logistic_regression': 'Logistic Regression',
             'svm': 'Support Vector Machine (SVM)',
-            'random_forest': 'Random Forest'
+            'random_forest': 'Random Forest',
+            'lstm': 'LSTM (Deep Learning)',
+            'phobert': 'PhoBERT (Transformer)'
         }
         
         selected_model = st.selectbox(
@@ -435,9 +476,9 @@ def main():
         
         st.markdown("---")
         st.markdown("""
-        **📚 Về dự án:**
+        **Dự án:**
         - 12 danh mục sản phẩm
-        - ~3,500 sản phẩm training
+        - ~8000 sản phẩm training
         - TF-IDF + ML/DL models
         """)
     
@@ -448,7 +489,7 @@ def main():
         st.header("Nhập thông tin sản phẩm")
         
         # Input tabs
-        tab1, tab2 = st.tabs(["✍️ Nhập text", "📄 Mẫu có sẵn"])
+        tab1, tab2 = st.tabs(["Nhập text", "Mẫu có sẵn"])
         
         with tab1:
             product_name = st.text_input("Tên sản phẩm:", placeholder="VD: Áo dài truyền thống màu đỏ")
@@ -478,7 +519,7 @@ def main():
             st.text_area("Nội dung mẫu:", input_text, height=100, disabled=True)
         
         # Predict button
-        predict_btn = st.button("🔮 Phân loại sản phẩm", type="primary", use_container_width=True)
+        predict_btn = st.button("Phân loại sản phẩm", type="primary", use_container_width=True)
     
     with col2:
         st.header("Kết quả dự đoán")
@@ -549,9 +590,8 @@ def main():
     st.markdown("---")
     st.markdown("""
     <div class="footer-text">
-        <p>🎓 <strong>NLP Project</strong> - Phân loại sản phẩm theo danh mục</p>
+        <p><strong>NLP Project</strong> - Phân loại sản phẩm theo danh mục</p>
         <p>Models: Logistic Regression, SVM, Random Forest, LSTM, PhoBERT</p>
-        <p style="font-size: 0.85rem; margin-top: 0.5rem;">👥 Bảo Châu • Duy Thái • Minh Huy • Quốc Trung</p>
     </div>
     """, unsafe_allow_html=True)
 

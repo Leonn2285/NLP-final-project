@@ -349,14 +349,14 @@ def load_models():
             except:
                 pass
         
-        # Load LSTM model
-        try:
-            from src.dl_models import LSTMClassifier
-            lstm_path = os.path.join(DL_MODELS_DIR, "lstm_model.keras")
-            if os.path.exists(lstm_path):
-                models['lstm'] = LSTMClassifier.load(lstm_path)
-        except Exception as e:
-            print(f"Could not load LSTM model: {e}")
+        # LSTM model
+        # try:
+        #     from src.dl_models import LSTMClassifier
+        #     lstm_path = os.path.join(DL_MODELS_DIR, "lstm_model.keras")
+        #     if os.path.exists(lstm_path):
+        #         models['lstm'] = LSTMClassifier.load(lstm_path)
+        # except Exception as e:
+        #     print(f"Could not load LSTM model: {e}")
         
         # Load PhoBERT model
         try:
@@ -420,6 +420,27 @@ def predict_category(text, model_name, resources):
     }
 
 
+def predict_all_models(text, resources):
+    """Predict with all available models for comparison"""
+    results = {}
+    model_display_names = {
+        'logistic_regression': 'Logistic Regression',
+        'svm': 'SVM',
+        'random_forest': 'Random Forest',
+        'lstm': 'LSTM',
+        'phobert': 'PhoBERT'
+    }
+    
+    for model_name in resources['models'].keys():
+        try:
+            result = predict_category(text, model_name, resources)
+            results[model_display_names.get(model_name, model_name)] = result
+        except Exception as e:
+            print(f"Error predicting with {model_name}: {e}")
+    
+    return results
+
+
 def main():
     # Header
     st.markdown('<h1 class="main-header">Product Category Classifier</h1>', unsafe_allow_html=True)
@@ -453,16 +474,23 @@ def main():
             'phobert': 'PhoBERT (Transformer)'
         }
         
-        selected_model = st.selectbox(
-            "Chọn Model:",
-            available_models,
-            format_func=lambda x: model_display_names.get(x, x)
-        )
+        # Compare mode toggle
+        compare_mode = st.checkbox("So sánh tất cả models", value=False)
+        
+        if not compare_mode:
+            selected_model = st.selectbox(
+                "Chọn Model:",
+                available_models,
+                format_func=lambda x: model_display_names.get(x, x)
+            )
+        else:
+            selected_model = None
+            st.info(f"Sẽ dự đoán với {len(available_models)} models")
         
         st.markdown("---")
         
         # Categories info
-        st.header("📁 Danh mục")
+        st.header("Danh mục")
         categories = resources['label_encoder'].classes_
         
         colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', 
@@ -525,61 +553,146 @@ def main():
         st.header("Kết quả dự đoán")
         
         if predict_btn and input_text.strip():
-            with st.spinner("Đang phân tích..."):
-                result = predict_category(input_text, selected_model, resources)
-            
-            # Main prediction
-            st.markdown(f"""
-            <div class="prediction-box">
-                <h2 style="margin: 0;">🏷️ {result['predicted_category']}</h2>
-                <p style="margin: 0.5rem 0;">Độ tin cậy: <strong>{result['confidence']:.1%}</strong></p>
-            </div>
-            """, unsafe_allow_html=True)
-            
-            # Confidence bar
-            st.markdown(f"""
-            <div class="confidence-bar">
-                <div class="confidence-fill" style="width: {result['confidence']*100}%"></div>
-            </div>
-            """, unsafe_allow_html=True)
-            
-            st.markdown("---")
-            
-            # Top 5 predictions chart
-            st.subheader("Top 5 danh mục có khả năng cao nhất")
-            
-            top_5 = result['all_predictions'][:5]
-            
-            fig = go.Figure(go.Bar(
-                x=[p['probability'] for p in top_5],
-                y=[p['category'] for p in top_5],
-                orientation='h',
-                marker=dict(
-                    color=[p['probability'] for p in top_5],
-                    colorscale='Viridis',
-                    showscale=False
-                ),
-                text=[f"{p['probability']:.1%}" for p in top_5],
-                textposition='auto'
-            ))
-            
-            fig.update_layout(
-                height=300,
-                margin=dict(l=0, r=0, t=0, b=0),
-                xaxis_title="Xác suất",
-                yaxis_title="",
-                xaxis=dict(range=[0, 1], tickformat='.0%'),
-                yaxis=dict(autorange="reversed")
-            )
-            
-            st.plotly_chart(fig, use_container_width=True)
-            
-            # All predictions table
-            with st.expander("📋 Xem tất cả danh mục"):
-                df = pd.DataFrame(result['all_predictions'])
-                df['probability'] = df['probability'].apply(lambda x: f"{x:.2%}")
-                df.columns = ['Danh mục', 'Xác suất']
-                st.dataframe(df, use_container_width=True)
+            if compare_mode:
+                # Compare all models
+                with st.spinner("Đang phân tích với tất cả models..."):
+                    all_results = predict_all_models(input_text, resources)
+                
+                if all_results:
+                    # Summary comparison table
+                    st.subheader("So sánh kết quả các Models")
+                    
+                    comparison_data = []
+                    for model_name, result in all_results.items():
+                        comparison_data.append({
+                            'Model': model_name,
+                            'Dự đoán': result['predicted_category'],
+                            'Độ tin cậy': result['confidence']
+                        })
+                    
+                    df_compare = pd.DataFrame(comparison_data)
+                    df_compare = df_compare.sort_values('Độ tin cậy', ascending=False)
+                    
+                    # Display as styled cards
+                    for idx, row in df_compare.iterrows():
+                        conf_color = '#28a745' if row['Độ tin cậy'] > 0.8 else '#ffc107' if row['Độ tin cậy'] > 0.5 else '#dc3545'
+                        st.markdown(f"""
+                        <div style="background: linear-gradient(145deg, #f5ede2, #e8dcc8); padding: 1rem; border-radius: 12px; margin: 0.5rem 0; border-left: 4px solid {conf_color};">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <strong style="color: #2c241c; font-size: 1.1rem;">{row['Model']}</strong>
+                                    <p style="margin: 0.3rem 0 0 0; color: #5a4a3a;">🏷️ {row['Dự đoán']}</p>
+                                </div>
+                                <div style="text-align: right;">
+                                    <span style="background: {conf_color}; color: white; padding: 0.3rem 0.8rem; border-radius: 20px; font-weight: bold;">
+                                        {row['Độ tin cậy']:.1%}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        """, unsafe_allow_html=True)
+                    
+                    st.markdown("---")
+                    
+                    # Bar chart comparison
+                    st.subheader("📈 Biểu đồ so sánh độ tin cậy")
+                    
+                    fig = go.Figure(go.Bar(
+                        x=df_compare['Model'],
+                        y=df_compare['Độ tin cậy'],
+                        text=[f"{v:.1%}" for v in df_compare['Độ tin cậy']],
+                        textposition='auto',
+                        marker=dict(
+                            color=df_compare['Độ tin cậy'],
+                            colorscale='Viridis',
+                            showscale=False
+                        )
+                    ))
+                    
+                    fig.update_layout(
+                        height=350,
+                        margin=dict(l=0, r=0, t=20, b=0),
+                        xaxis_title="Model",
+                        yaxis_title="Độ tin cậy",
+                        yaxis=dict(range=[0, 1], tickformat='.0%')
+                    )
+                    
+                    st.plotly_chart(fig, use_container_width=True)
+                    
+                    # Check if all models agree
+                    predictions = [r['predicted_category'] for r in all_results.values()]
+                    if len(set(predictions)) == 1:
+                        st.success(f"✅ **Tất cả {len(all_results)} models đều đồng ý:** {predictions[0]}")
+                    else:
+                        unique_preds = list(set(predictions))
+                        st.warning(f"⚠️ **Các models dự đoán khác nhau:** {', '.join(unique_preds)}")
+                    
+                    # Detailed results for each model
+                    with st.expander("📋 Chi tiết từng model"):
+                        for model_name, result in all_results.items():
+                            st.markdown(f"**{model_name}**")
+                            top_3 = result['all_predictions'][:3]
+                            for i, pred in enumerate(top_3):
+                                st.write(f"  {i+1}. {pred['category']}: {pred['probability']:.2%}")
+                            st.markdown("---")
+                
+            else:
+                # Single model prediction
+                with st.spinner("Đang phân tích..."):
+                    result = predict_category(input_text, selected_model, resources)
+                
+                # Main prediction
+                st.markdown(f"""
+                <div class="prediction-box">
+                    <h2 style="margin: 0;">🏷️ {result['predicted_category']}</h2>
+                    <p style="margin: 0.5rem 0;">Độ tin cậy: <strong>{result['confidence']:.1%}</strong></p>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                # Confidence bar
+                st.markdown(f"""
+                <div class="confidence-bar">
+                    <div class="confidence-fill" style="width: {result['confidence']*100}%"></div>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                st.markdown("---")
+                
+                # Top 5 predictions chart
+                st.subheader("Top 5 danh mục có khả năng cao nhất")
+                
+                top_5 = result['all_predictions'][:5]
+                
+                fig = go.Figure(go.Bar(
+                    x=[p['probability'] for p in top_5],
+                    y=[p['category'] for p in top_5],
+                    orientation='h',
+                    marker=dict(
+                        color=[p['probability'] for p in top_5],
+                        colorscale='Viridis',
+                        showscale=False
+                    ),
+                    text=[f"{p['probability']:.1%}" for p in top_5],
+                    textposition='auto'
+                ))
+                
+                fig.update_layout(
+                    height=300,
+                    margin=dict(l=0, r=0, t=0, b=0),
+                    xaxis_title="Xác suất",
+                    yaxis_title="",
+                    xaxis=dict(range=[0, 1], tickformat='.0%'),
+                    yaxis=dict(autorange="reversed")
+                )
+                
+                st.plotly_chart(fig, use_container_width=True)
+                
+                # All predictions table
+                with st.expander("📋 Xem tất cả danh mục"):
+                    df = pd.DataFrame(result['all_predictions'])
+                    df['probability'] = df['probability'].apply(lambda x: f"{x:.2%}")
+                    df.columns = ['Danh mục', 'Xác suất']
+                    st.dataframe(df, use_container_width=True)
         
         elif predict_btn:
             st.warning("⚠️ Vui lòng nhập thông tin sản phẩm!")

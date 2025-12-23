@@ -1,19 +1,19 @@
-# 🚀 Hướng dẫn cài đặt nhanh
+# Hướng dẫn cài đặt nhanh
 
-## Đã cài đặt thành công! ✅
+## Đã cài đặt thành công! 
 
 ### Packages đã cài (Essential):
-- ✅ pandas, numpy - Data processing
-- ✅ scikit-learn - Machine Learning
-- ✅ matplotlib, seaborn, plotly - Visualization
-- ✅ streamlit - Web UI
-- ✅ beautifulsoup4, lxml - HTML parsing
-- ✅ jupyter, ipykernel - Notebooks
-- ✅ underthesea - Vietnamese NLP
+- pandas, numpy - Data processing
+- scikit-learn - Machine Learning
+- matplotlib, seaborn, plotly - Visualization
+- streamlit - Web UI
+- beautifulsoup4, lxml - HTML parsing
+- jupyter, ipykernel - Notebooks
+- underthesea - Vietnamese NLP
 
 ### Packages Optional (chưa cài):
-- ⏸️ TensorFlow (cho LSTM) - Nặng, cài khi cần
-- ⏸️ PyTorch + Transformers (cho PhoBERT) - Nặng, cài khi cần
+- TensorFlow (cho LSTM) - Nặng, cài khi cần
+- PyTorch + Transformers (cho PhoBERT) - Nặng, cài khi cần
 
 ## Tiếp theo làm gì?
 
@@ -47,9 +47,9 @@ pip install torch transformers accelerate
 
 ## Lưu ý quan trọng
 
-⚠️ **Phải chạy notebook training trước** để tạo các file models, nếu không Streamlit app sẽ báo lỗi!
+**Phải chạy notebook training trước** để tạo các file models, nếu không Streamlit app sẽ báo lỗi!
 
-✅ **Chỉ cần ML models** (LR, SVM, RF) là đủ để demo, không nhất thiết phải có DL models.
+**Chỉ cần ML models** (LR, SVM, RF) là đủ để demo, không nhất thiết phải có DL models.
 
 ## Troubleshooting
 
@@ -92,4 +92,4 @@ print(f"Original: {text}")
 print(f"Processed: {processed}")
 ```
 
-Chúc bạn thành công! 🎉
+Chúc bạn thành công!

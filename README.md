@@ -6,16 +6,16 @@
 [![TensorFlow](https://img.shields.io/badge/TensorFlow-2.13+-orange.svg)](https://tensorflow.org)
 [![Streamlit](https://img.shields.io/badge/Streamlit-1.28+-red.svg)](https://streamlit.io)
 
-## 📋 Tổng quan
+## Tổng quan
 
 Dự án xây dựng hệ thống phân loại tự động sản phẩm vào 12 danh mục dựa trên tên, mô tả và thương hiệu sản phẩm. Sử dụng kết hợp các phương pháp Machine Learning và Deep Learning.
 
-### 🎯 Mục tiêu
+### Mục tiêu
 - Phân loại chính xác sản phẩm vào 12 danh mục
 - So sánh hiệu quả giữa ML và DL models
 - Xây dựng ứng dụng demo thực tế
 
-### 📊 Danh mục sản phẩm (12 categories)
+### Danh mục sản phẩm (12 categories)
 1. Thời trang Nữ
 2. Thời trang Nam
 3. Điện thoại & Phụ kiện
@@ -29,7 +29,7 @@ Dự án xây dựng hệ thống phân loại tự động sản phẩm vào 12
 11. Đồ chơi trẻ em
 12. Sách & Văn phòng phẩm
 
-## 📁 Cấu trúc thư mục
+## Cấu trúc thư mục
 
 ```
 NLP/
@@ -60,7 +60,7 @@ NLP/
 └── README.md
 ```
 
-## 🚀 Cài đặt
+## Cài đặt
 
 ### 1. Clone repository
 ```bash
@@ -84,7 +84,7 @@ pip install -r requirements.txt
 pip install underthesea
 ```
 
-## 📖 Hướng dẫn sử dụng
+## Hướng dẫn sử dụng
 
 ### 1. Chạy Data Cleaning và EDA (đã hoàn thành)
 Mở và chạy các notebooks trong thư mục `notebooks/`:
@@ -103,7 +103,7 @@ streamlit run app/streamlit_app.py
 ```
 Truy cập: http://localhost:8501
 
-## 🤖 Models
+## Models
 
 ### Machine Learning (3 models)
 | Model | Description |
@@ -123,7 +123,7 @@ Truy cập: http://localhost:8501
 - N-gram range: (1, 2) - unigrams và bigrams
 - Áp dụng thống nhất cho tất cả models
 
-## 📈 Kết quả dự kiến
+## Kết quả dự kiến
 
 | Model | Accuracy | F1 (Macro) | F1 (Weighted) |
 |-------|----------|------------|---------------|
@@ -135,7 +135,7 @@ Truy cập: http://localhost:8501
 
 *Kết quả thực tế sẽ được cập nhật sau khi train*
 
-## 🔧 Configuration
+## Configuration
 
 Các thông số cấu hình trong `config.py`:
 
@@ -162,14 +162,14 @@ LSTM_CONFIG = {
 }
 ```
 
-## 📊 Visualizations
+## Visualizations
 
 Sau khi train, các biểu đồ sẽ được lưu trong `visualizations/`:
 - `model_comparison.png` - So sánh performance các models
 - `f1_per_class.png` - F1 score theo từng category
 - `confusion_matrix_*.png` - Ma trận nhầm lẫn
 
-## 🖥️ Demo App
+## Demo App
 
 Ứng dụng Streamlit cho phép:
 - Nhập thông tin sản phẩm (tên, mô tả, thương hiệu)
@@ -177,23 +177,23 @@ Sau khi train, các biểu đồ sẽ được lưu trong `visualizations/`:
 - Xem kết quả dự đoán với confidence score
 - Hiển thị top 5 categories có khả năng cao nhất
 
-## 📚 Quy trình thực hiện
+## Quy trình thực hiện
 
-1. **Thu thập dữ liệu** ✅
+1. **Thu thập dữ liệu** 
    - Crawl từ Tiki
    - 4 files dữ liệu gốc
 
-2. **Phân tích EDA** ✅
+2. **Phân tích EDA** 
    - Phân bố categories
    - Độ dài text
    - Word frequency
 
-3. **Xử lý dữ liệu** ✅
+3. **Xử lý dữ liệu** 
    - Làm sạch text tiếng Việt
    - Loại bỏ stopwords
    - Chuẩn hóa Unicode
 
-4. **Feature Engineering** ✅
+4. **Feature Engineering** 
    - TF-IDF vectorization
    - Text combination
 
@@ -206,21 +206,17 @@ Sau khi train, các biểu đồ sẽ được lưu trong `visualizations/`:
    - Confusion matrix
    - Per-class analysis
 
-7. **Ứng dụng** ✅
+7. **Ứng dụng** 
    - Streamlit web app
    - Real-time prediction
 
-## 👥 Thành viên nhóm
-
+## Thành viên nhóm
 - Bảo Châu
 - Duy Thái
 - Minh Huy  
 - Quốc Trung
 
-## 📝 License
-
+## License
 MIT License
-
 ---
-
-⭐ **Lưu ý:** Chạy `model_training.ipynb` trước khi sử dụng ứng dụng demo!
+**Lưu ý:** Chạy `model_training.ipynb` trước khi sử dụng ứng dụng demo!

@@ -350,13 +350,13 @@ def load_models():
                 pass
         
         # LSTM model
-        # try:
-        #     from src.dl_models import LSTMClassifier
-        #     lstm_path = os.path.join(DL_MODELS_DIR, "lstm_model.keras")
-        #     if os.path.exists(lstm_path):
-        #         models['lstm'] = LSTMClassifier.load(lstm_path)
-        # except Exception as e:
-        #     print(f"Could not load LSTM model: {e}")
+        try:
+            from src.dl_models import LSTMClassifier
+            lstm_path = os.path.join(DL_MODELS_DIR, "lstm_model.keras")
+            if os.path.exists(lstm_path):
+                models['lstm'] = LSTMClassifier.load(lstm_path)
+        except Exception as e:
+            print(f"Could not load LSTM model: {e}")
         
         # Load PhoBERT model
         try:
@@ -388,8 +388,12 @@ def predict_category(text, model_name, resources):
     # Handle different model types
     if model_name == 'lstm':
         # LSTM cần TF-IDF features dạng dense array
+        # Suppress TensorFlow verbose output
+        import os
+        os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
         X = resources['vectorizer'].transform([processed_text])
         X_dense = X.toarray().astype('float32')
+        # LSTM prediction - có thể chậm lần đầu do TensorFlow warmup
         prediction = model.predict(X_dense)[0]
         probas = model.predict_proba(X_dense)[0]
     elif model_name == 'phobert':

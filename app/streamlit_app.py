@@ -1,5 +1,5 @@
 """
-🛒 Product Category Classification App
+Product Category Classification App
 Ứng dụng phân loại sản phẩm theo danh mục sử dụng Streamlit
 
 Run with: streamlit run app/streamlit_app.py
